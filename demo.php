@@ -11,8 +11,8 @@ $config = array(
     );
 
 $vod = new VodApi($config);
-$vod->SetSecretId("AKIDvzvn8Clc7Ck0L0uR8yIU3Csjlnfnrxjs");
-$vod->SetSecretKey("EHLKDE4LFcUAxxPEfHziTMwuwZZk3bKt");
+$vod->SetSecretId("AKIDvzvn***");
+$vod->SetSecretKey("EHLKDE4***");
 $vod->SetRegion("gz");
 $vod->SetConcurrentNum(10);	//设置并发上传的分片数目，不调用此函数时默认并发上传数为6
 $vod->SetRetryTimes(10);	//设置每个分片可重传的次数，不调用此函数时默认值为5
