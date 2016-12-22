@@ -24,9 +24,12 @@ $package = array(
     'isTranscode' => 0,					//是否转码
     'isScreenshot' => 0,				//是否截图
     'isWatermark' => 0,					//是否添加水印
-    'notifyUrl' =>""					//转码完成后的回调地址，不转码此项无效
+    'notifyUrl' =>"",					//转码完成后的回调地址，不转码此项无效
+	'classId' => 0						//分类
 );
 
+$vod->AddFileTag("测试1");
+$vod->AddFileTag("测试2");
 $ret = $vod->UploadVideo($package);
 if($ret !== 0)
 {

@@ -34,6 +34,8 @@ class VodApi {
 	protected $_isScreenshot;
 	protected $_isWatermark;
 	protected $_notifyUrl;
+	protected $_classId;
+	protected $_fileTags;
 	
 	protected $_arrPartFiles;		//文件分片列表
 	protected $_concurUploadNum;	//并发上传分片数目
@@ -62,6 +64,7 @@ class VodApi {
 			$this->_requestMethod = 'POST';
 			$this->_concurUploadNum = 6;
 			$this->_retryTimes = 5;
+			$this->_fileTags = array();
 		}
 	}
 
@@ -95,6 +98,10 @@ class VodApi {
 		$this->_retryTimes = (int)$retryTimes;
 	}
 
+	public function AddFileTag($fileTag) {
+		$this->_fileTags[] = $fileTag;
+	}
+	
 	public function getFileId() {
 		return $this->_fileId;
 	}
@@ -209,25 +216,29 @@ class VodApi {
 			$this->_isScreenshot = isset($params['isScreenshot']) ? $params['isScreenshot'] : 0;
 			$this->_isWatermark = isset($params['isWatermark']) ? $params['isWatermark'] : 0;
 			$this->_notifyUrl = isset($params['notifyUrl']) ? $params['notifyUrl'] : "";
-	
+			$this->_classId = isset($params['classId']) ? $params['classId'] : 0;
 			$arguments = array(
 				'Action' => $name,
 				'Nonce' => $Nonce,
 				'Region' => $this->_defaultRegion,
 				'SecretId' => $this->_secretId,
 				'Timestamp' => $timestamp,
+				'classId' => $this->_classId,
 				'contentLen' => strlen($data),
 				'dataSize' => $this->_dataSize,
 				'fileName' => $fileName_NoSurfix,
 				'fileSha' => $this->_fileSha,
 				'fileSize' => $this->_fileSize,
 				'fileType' => $this->_fileType,
-				//'classfyId' => $params['classfyId'],
 				'isTranscode' => $this->_isTranscode,
 				'isScreenshot' => $this->_isScreenshot,
 				'isWatermark' => $this->_isWatermark,
 				'name' => $this->_fileName
 			);
+			$sizeFileTags = count($this->_fileTags);
+			for($i = 0; $i < $sizeFileTags; ++$i) {
+				$arguments['tag.'.(string)($i+1)] = $this->_fileTags[$i];
+			}
 			$send_retry_times = 0;
 			$this->makeRequest($name, $arguments, $request);
 			while(!($response = self::sendPostRequest($request, $data))) {
@@ -498,7 +509,7 @@ class VodApi {
 				$paramStr .= '?';
 			else
 				$paramStr .= '&';
-			$paramStr .= $key . '=' . $value;
+			$paramStr .= $key . '=' . urlencode($value);
 			++$i;
 		}
 		$plainText = $requestMethod . $url . $paramStr;
@@ -518,6 +529,7 @@ class VodApi {
 		$params = $arguments;
 		$params['Action'] = $action;
 		$params['RequestClient'] = $this->_version;
+		ksort($params);
 		$plainText = self::makeSignPlainText($params, $this->_requestMethod, $this->_serverHost, $this->_serverUri);
 		$params['Signature'] = base64_encode(hash_hmac('sha1', $plainText, $this->_secretKey, true));
 		
