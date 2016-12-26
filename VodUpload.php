@@ -33,7 +33,6 @@ class VodApi {
 	protected $_isTranscode;
 	protected $_isScreenshot;
 	protected $_isWatermark;
-	protected $_notifyUrl;
 	protected $_classId;
 	protected $_fileTags;
 	
@@ -215,7 +214,6 @@ class VodApi {
 			$this->_isTranscode = isset($params['isTranscode']) ? $params['isTranscode'] : 0;
 			$this->_isScreenshot = isset($params['isScreenshot']) ? $params['isScreenshot'] : 0;
 			$this->_isWatermark = isset($params['isWatermark']) ? $params['isWatermark'] : 0;
-			$this->_notifyUrl = isset($params['notifyUrl']) ? $params['notifyUrl'] : "";
 			$this->_classId = isset($params['classId']) ? $params['classId'] : 0;
 			$arguments = array(
 				'Action' => $name,
@@ -321,7 +319,6 @@ class VodApi {
 					'isScreenshot' => $this->_isScreenshot,
 					'isWatermark' => $this->_isWatermark,
 					'name' => $this->_fileName,
-					'notifyUrl' => $this->_notifyUrl,
 					'offset' => $this->_arrPartFiles[$index]->_offset
 				);
 				$this->makeRequest($name, $arguments, $request);
@@ -452,7 +449,6 @@ class VodApi {
 				'Timestamp' => $timestamp,
 				'contentLen' => strlen($data),
 				'fileSha' => $this->_fileSha,
-				'notifyUrl' => $this->_notifyUrl
 			);
 			$send_retry_times = 0;
 			
