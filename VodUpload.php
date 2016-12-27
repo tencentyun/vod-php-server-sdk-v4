@@ -41,30 +41,17 @@ class VodApi {
 	protected $_retryTimes;			//上传失败时，可重试上传的次数
 	protected $_fileId = '-1';		//上传成功时，FinishUpload会设置该值
 	
-	public function __construct($config = array()) {
-		if(!empty($config) && is_array($config)) {
-			foreach ($config as $key => $val) {
-				switch($key) {
-				case 'ServerHost':
-					$this->_serverHost = $val;
-					break;
-				case 'ServerPort':
-					$this->_serverPort = $val;
-					break;
-				case 'ServerUri':
-					$this->_serverUri = $val;
-					break;
-				case 'SdkVersion':
-					$this->_version = $val;
-					break;
-				}	
-			}
-			//目前上传接口只支持POST方法
-			$this->_requestMethod = 'POST';
-			$this->_concurUploadNum = 6;
-			$this->_retryTimes = 5;
-			$this->_fileTags = array();
-		}
+	public function __construct() {
+		$this->_serverHost = "vod2.qcloud.com";
+		$this->_serverPort = 80;
+		$this->_serverUri = "/v3/index.php";
+		$this->_version = "SDK_PHP_1.2";
+
+		//目前上传接口只支持POST方法
+		$this->_requestMethod = 'POST';
+		$this->_concurUploadNum = 6;
+		$this->_retryTimes = 5;
+		$this->_fileTags = array();
 	}
 
 	public function SetSecretId($secretId) {

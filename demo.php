@@ -2,15 +2,7 @@
 error_reporting(E_ALL ^ E_NOTICE);
 require_once './VodUpload.php';
 
-/* $config: 上传腾讯云服务器信息，保持不变 */
-$config = array(
-	'ServerHost'	=> 'vod2.qcloud.com',
-	'ServerPort'	=> 80,
-	'ServerUri'		=> '/v2/index.php',
-	'SdkVersion'	=> 'SDK_PHP_1.2'
-    );
-
-$vod = new VodApi($config);
+$vod = new VodApi();
 $vod->SetSecretId("AKIDvzvn***");
 $vod->SetSecretKey("EHLKDE4***");
 $vod->SetRegion("gz");
