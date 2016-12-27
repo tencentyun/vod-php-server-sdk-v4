@@ -11,7 +11,7 @@ demo.php
 error_reporting(E_ALL ^ E_NOTICE);
 require_once './VodUpload.php';
 
-$vod = new VodApi($config);
+$vod = new VodApi();
 $vod->SetSecretId("AKIDvzvn***");
 $vod->SetSecretKey("EHLKDE4***");
 $vod->SetRegion("gz");
