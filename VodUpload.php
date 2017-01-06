@@ -492,7 +492,7 @@ class VodApi {
 				$paramStr .= '?';
 			else
 				$paramStr .= '&';
-			$paramStr .= $key . '=' . urlencode($value);
+			$paramStr .= $key . '=' . $value;
 			++$i;
 		}
 		$plainText = $requestMethod . $url . $paramStr;
