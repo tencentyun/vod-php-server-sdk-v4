@@ -41,31 +41,83 @@ class VodApi {
 	protected $_retryTimes;			//上传失败时，可重试上传的次数
 	protected $_fileId = '-1';		//上传成功时，FinishUpload会设置该值
 	
+	protected $_usage;
+	protected $_uploadServerHost;
+	protected $_uploadServerUri;
+	protected $_uploadReqMethod;
+	
+	protected $_restApiServerHost;
+	protected $_restApiServerUri;
+	protected $_restApiReqMethod;
+	
+	const USAGE_UPLOAD = 0;
+	const USAGE_UGC_UPLOAD = 1;
+	const USAGE_VOD_REST_API_CALL = 2;
+	
 	public function __construct() {
-		$this->_serverHost = "vod2.qcloud.com";
+		$this->_uploadServerHost = "vod2.qcloud.com";
+		$this->_uploadServerUri = "/v3/index.php";
+		
+		$this->_restApiServerHost = "vod.api.qcloud.com";
+		$this->_restApiServerUri = "/v2/index.php";
+		
 		$this->_serverPort = 80;
-		$this->_serverUri = "/v3/index.php";
 		$this->_version = "SDK_PHP_1.2";
-
-		//目前上传接口只支持POST方法
-		$this->_requestMethod = 'POST';
+		$this->_uploadReqMethod = "POST";
+		$this->_restApiReqMethod = "GET";
+		
 		$this->_concurUploadNum = 6;
 		$this->_retryTimes = 5;
 		$this->_fileTags = array();
 	}
 
-	public function SetSecretId($secretId) {
+	public function Init($secretId, $secretKey, $usage, $region) {
 		$this->_secretId = $secretId;
-	}
-
-	public function SetSecretKey($secretKey) {
 		$this->_secretKey = $secretKey;
-	}
-
-	public function SetRegion($region) {
 		$this->_defaultRegion = $region;
+		$this->_usage = $usage;
+		if($this->_usage == self::USAGE_VOD_REST_API_CALL) {
+			$this->_serverHost = $this->_restApiServerHost;
+			$this->_serverUri = $this->_restApiServerUri;
+			$this->_requestMethod = $this->_restApiReqMethod;
+		} else if($this->_usage == self::USAGE_UPLOAD || $this->_usage == self::USAGE_UGC_UPLOAD) {
+			$this->_serverHost = $this->_uploadServerHost;
+			$this->_serverUri = $this->_uploadServerUri;
+			$this->_requestMethod = $this->_uploadReqMethod;
+		}
+		//$this->_serverHost = "vod2.qcloud.com";
 	}
-
+	
+	public function InitCommPara(&$paraMap) {
+		$paraMap["Region"] = $this->_defaultRegion;
+		$paraMap["SecretId"] = $this->_secretId;
+		$paraMap["fileSha"] = $this->_fileSha;
+		$paraMap["Timestamp"] = time();
+		$paraMap["Nonce"] = rand(0, 1000000);
+	}
+	
+	public function CallRestApi($paraMap) {
+		if($this->_usage != self::USAGE_VOD_REST_API_CALL) {
+			echo "CallRestApi|usage error!\n";
+			return -1;
+		}
+		$paraMap["Region"] = $this->_defaultRegion;
+		$paraMap["SecretId"] = $this->_secretId;
+		$paraMap["Timestamp"] = time();
+		$paraMap["Nonce"] = rand(0, 1000000);
+		$sign = $this->GetReqSign($paraMap);
+		$this->makeRequest($paraMap["Action"], $paraMap, $request);
+		if(!($response = $this->sendRequest($request, $data))) {
+			echo "CallRestApi|sendRequest error\n";
+			echo "CallRestApi|recv:" . json_encode($response) . "\n";
+			return -1;
+		} else {
+			echo "CallRestApi|recv:" . json_encode($response) . "\n";
+			return 0;
+		}
+		
+	}
+	
 	/**
 	 * SetConcurrentNum
 	 * 设置并发上传分片数目
@@ -226,7 +278,7 @@ class VodApi {
 			}
 			$send_retry_times = 0;
 			$this->makeRequest($name, $arguments, $request);
-			while(!($response = self::sendPostRequest($request, $data))) {
+			while(!($response = $this->sendRequest($request, $data))) {
 				if($send_retry_times > 3) {
 					echo "[InitUpload] send retry times reach MAX 3,failed!\n";
 					return false;
@@ -440,7 +492,7 @@ class VodApi {
 			$send_retry_times = 0;
 			
 			$this->makeRequest($name, $arguments, $request);
-			while(!($response = self::sendPostRequest($request, $data))) {
+			while(!($response = $this->sendRequest($request, $data))) {
 				if($send_retry_times > 3) {
 					//$this->setError("", 'request falied!');
 					echo "[FinishUpload] send retry times reach MAX 3,failed!\n";
@@ -465,25 +517,22 @@ class VodApi {
 	}
 	
 	/**
-     * makeSignPlainText
-     * 生成拼接签名源文字符串
-     * @param array 	$requestParams  请求参数
-     * @param string 	$requestMethod 请求方法
-     * @param string 	$requestHost   接口域名
-     * @param string 	$requestPath   url路径
+     * GetReqSign
+     * 生成请求的签名字符串
+     * @param array 	$paraMap  请求参数
      * @return
      */
-	public static function makeSignPlainText($requestParams, $requestMethod, $requestHost, $requestPath) {
-		$url = $requestHost . $requestPath;
-
+	public function GetReqSign($paraMap) {
+		if($this->_usage == self::USAGE_UPLOAD)
+			$this->InitCommPara($paraMap);
 		$paramStr = "";
-		ksort($requestParams);
+		ksort($paraMap);
 		$i = 0;
-		foreach ($requestParams as $key => $value) {
+		foreach ($paraMap as $key => $value) {
 			if ($key == 'Signature')
 				continue;
 			// 排除上传文件的参数
-			if ($requestMethod == 'POST' && substr($value, 0, 1) == '@')
+			if ($this->_requestMethod == 'POST' && substr($value, 0, 1) == '@')
 				continue;
 			// 把 参数中的 _ 替换成 .
 			if (strpos($key, '_'))
@@ -495,8 +544,11 @@ class VodApi {
 			$paramStr .= $key . '=' . urlencode($value);
 			++$i;
 		}
-		$plainText = $requestMethod . $url . $paramStr;
-		return $plainText;
+		$plainText = $this->_requestMethod . $this->_serverHost . $this->_serverUri . $paramStr;
+		$cipherText = base64_encode(hash_hmac('sha1', $plainText, $this->_secretKey, true));
+		echo "GetReqSign|plainText:" . $plainText . "\n";
+		echo "GetReqSign|cipherText:" . $cipherText . "\n";
+		return $cipherText;
 	}
 	
 	/**
@@ -513,8 +565,7 @@ class VodApi {
 		$params['Action'] = $action;
 		$params['RequestClient'] = $this->_version;
 		ksort($params);
-		$plainText = self::makeSignPlainText($params, $this->_requestMethod, $this->_serverHost, $this->_serverUri);
-		$params['Signature'] = base64_encode(hash_hmac('sha1', $plainText, $this->_secretKey, true));
+		$params['Signature'] = $this->GetReqSign($params);
 		
 		$request['uri'] = $this->_serverUri;
 		$request['host'] = $this->_serverHost;
@@ -526,25 +577,32 @@ class VodApi {
 			$url = $request['host'] . ":" . $this->_serverPort . $request['uri'];
 
 		$url = $url.'?'.$request['query'];
-		if($https)
-			$url = 'https://'.$url;
-		else
-			$url = 'http://'.$url;
+		$url = 'https://'.$url;
 
 		$request['url'] = $url;//
+echo "request url:" . $request['url'] . "\n";
 		$request['contentLen'] = $arguments['contentLen'];
 	}
 	
 	/**
-     	* sendPostRequest
+     	* sendRequest
      	* @param array  $request    http请求参数
      	* @param string $data       发送的数据
      	* @return
      	*/
-	protected static function sendPostRequest($request, $data) {  
+	protected function sendRequest($request, $data) {  
 		$url = $request['url'];
+		$ch = curl_init($url);
+		if($this->_requestMethod == "GET") {
+			$MethodLine = "GET {$request['uri']}?{$request['query']} HTTP/1/1";
+		} else if($this->_requestMethod == "POST") {
+			curl_setopt($ch, CURLOPT_POST, 1);
+			$MethodLine = "POST {$request['uri']}?{$request['query']} HTTP/1/1";
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		}
+		
 		$header = array(
-			"POST {$request['uri']}?{$request['query']} HTTP/1/1",
+			$MethodLine,
 			"HOST:{$request['host']}",
 			"Content-Length:".$request['contentLen'],
 			"Content-type:application/octet-stream",
@@ -553,22 +611,16 @@ class VodApi {
 				
 		);
 		
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_HEADER, 0);
 		curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-			
-		if (false !== strpos($url, "https")) {
-			// 证书
-			// curl_setopt($ch,CURLOPT_CAINFO,"ca.crt");
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-		}
 		
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		// 证书
+		// curl_setopt($ch,CURLOPT_CAINFO,"ca.crt");
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 		
 		
 		$response = curl_exec($ch);
@@ -577,7 +629,7 @@ class VodApi {
 
 		$result = json_decode($response, true);
 		if (!$result) {
-			echo "[sendPostRequest] 请求发送失败，请检查URL:\n";
+			echo "[sendRequest] 请求发送失败，请检查URL:\n";
 			echo $url;
 			return $response;
 		}
