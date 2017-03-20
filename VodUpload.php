@@ -105,7 +105,6 @@ class VodApi {
 		$paraMap["SecretId"] = $this->_secretId;
 		$paraMap["Timestamp"] = time();
 		$paraMap["Nonce"] = rand(0, 1000000);
-		$sign = $this->GetReqSign($paraMap);
 		$this->makeRequest($paraMap["Action"], $paraMap, $request);
 		if(!($response = $this->sendRequest($request, ""))) {
 			echo "CallRestApi|sendRequest error\n";
