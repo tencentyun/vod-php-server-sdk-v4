@@ -31,12 +31,13 @@ if($ret !== 0)
 */
 
 /*
-//for REST API调用
+//for REST API调用，$paraMap中需指定Action+业务参数
 $vod = new VodApi();
 //$vod->Init("AKIDvzvn***", "EHLKDE4***", VodApi::USAGE_VOD_REST_API_CALL, "gz");
-$paraMap = array();
-$paraMap["Action"] = "DescribeVodPlayUrls";
-$paraMap["fileId"] = "9031868222***";
+$paraMap = array(
+	'Action' => "DescribeVodPlayUrls",
+	'fileId' => "9031868222***"
+);
 $ret = $vod->CallRestApi($paraMap);
 if($ret !== 0)
 {

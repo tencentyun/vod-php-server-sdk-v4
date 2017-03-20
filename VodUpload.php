@@ -579,8 +579,8 @@ class VodApi {
 		$url = $url.'?'.$request['query'];
 		$url = 'https://'.$url;
 
-		$request['url'] = $url;//
-echo "request url:" . $request['url'] . "\n";
+		$request['url'] = $url;
+		echo "makeRequest|request url:" . $request['url'] . "\n";
 		$request['contentLen'] = $arguments['contentLen'];
 	}
 	
@@ -630,7 +630,7 @@ echo "request url:" . $request['url'] . "\n";
 		$result = json_decode($response, true);
 		if (!$result) {
 			echo "[sendRequest] 请求发送失败，请检查URL:\n";
-			echo $url;
+			echo $url . "\n";
 			return $response;
 		}
 		return $result;
