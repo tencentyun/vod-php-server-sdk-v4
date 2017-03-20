@@ -107,7 +107,7 @@ class VodApi {
 		$paraMap["Nonce"] = rand(0, 1000000);
 		$sign = $this->GetReqSign($paraMap);
 		$this->makeRequest($paraMap["Action"], $paraMap, $request);
-		if(!($response = $this->sendRequest($request, $data))) {
+		if(!($response = $this->sendRequest($request, ""))) {
 			echo "CallRestApi|sendRequest error\n";
 			echo "CallRestApi|recv:" . json_encode($response) . "\n";
 			return -1;
