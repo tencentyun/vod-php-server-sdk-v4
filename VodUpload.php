@@ -88,14 +88,6 @@ class VodApi {
 		//$this->_serverHost = "vod2.qcloud.com";
 	}
 	
-	public function InitCommPara(&$paraMap) {
-		$paraMap["Region"] = $this->_defaultRegion;
-		$paraMap["SecretId"] = $this->_secretId;
-		$paraMap["fileSha"] = $this->_fileSha;
-		$paraMap["Timestamp"] = time();
-		$paraMap["Nonce"] = rand(0, 1000000);
-	}
-	
 	public function CallRestApi($paraMap) {
 		if($this->_usage != self::USAGE_VOD_REST_API_CALL) {
 			echo "CallRestApi|usage error!\n";
@@ -522,8 +514,6 @@ class VodApi {
      * @return
      */
 	public function GetReqSign($paraMap) {
-		if($this->_usage == self::USAGE_UPLOAD)
-			$this->InitCommPara($paraMap);
 		$paramStr = "";
 		ksort($paraMap);
 		$i = 0;
