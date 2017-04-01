@@ -62,7 +62,7 @@ class VodApi {
 		$this->_restApiServerUri = "/v2/index.php";
 		
 		$this->_serverPort = 80;
-		$this->_version = "SDK_PHP_1.2";
+		$this->_version = "SDK_PHP_1.3";
 		$this->_uploadReqMethod = "POST";
 		$this->_restApiReqMethod = "GET";
 		
@@ -281,6 +281,7 @@ class VodApi {
 	
 			if($response['code'] == 1) {//文件部分分片已经上传到服务器
 				echo "[InitUpload] file part existed!\n";
+				$this->_dataSize = $response['dataSize'];
 				$this->GeneratePartInfo($this->_fileSize, $this->_dataSize, $this->_retryTimes);
 				foreach($response['listParts'] as $val) {	
 					$index = floor($val["offset"] / $this->_dataSize);
