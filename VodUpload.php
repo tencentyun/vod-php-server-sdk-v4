@@ -325,7 +325,7 @@ class VodApi {
 				if($index > $partNum - 1 || $count > $this->_concurUploadNum - 1) {
 					break;
 				}
-				if($this->_arrPartFiles[$i]->_isSent === 1) {
+				if($this->_arrPartFiles[$index]->_isSent === 1) {
 					++$index;
 					continue;
 				}
