@@ -11,7 +11,7 @@ $vod->SetRetryTimes(10);	//设置每个分片可重传的次数，不调用此�
 // $package: 上传的文件配置参数
 $package = array(
     'fileName' => $argv[1],				//文件的绝对路径，包含文件名
-    'dataSize' => 1024*1024,			//分片大小，单位Bytes
+    'dataSize' => 1024*1024,			//分片大小，单位Bytes。断点续传时，dataSize强制使用第一次上传时的值。
     'isTranscode' => 0,					//是否转码
     'isScreenshot' => 0,				//是否截图
     'isWatermark' => 0,					//是否添加水印
