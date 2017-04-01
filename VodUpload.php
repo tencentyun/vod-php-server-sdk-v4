@@ -62,7 +62,7 @@ class VodApi {
 		$this->_restApiServerUri = "/v2/index.php";
 		
 		$this->_serverPort = 80;
-		$this->_version = "SDK_PHP_1.3";
+		$this->_version = "SDK_PHP_1.4";
 		$this->_uploadReqMethod = "POST";
 		$this->_restApiReqMethod = "GET";
 		
